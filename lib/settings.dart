@@ -36,7 +36,6 @@ class SettingsState extends State<SettingsPage> {
   @override
   initState() {
     super.initState();
-    // Add listeners to this class
     _getData();
   }
 

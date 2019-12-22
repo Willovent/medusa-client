@@ -8,6 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:loading/indicator/ball_pulse_indicator.dart';
 import 'package:loading/loading.dart';
 import 'package:medusa_client/menu.dart';
+import 'package:medusa_client/models/api-state.model.dart';
+import 'package:medusa_client/serie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models/serie.model.dart';
@@ -38,12 +40,11 @@ class MyHomePage extends StatefulWidget {
 
 class HomePageState extends State<MyHomePage> {
   List<Serie> _series;
-  String _apiKey;
-  String _apiUrl;
+  ApiState _apiState;
 
   Future<void> _loadSeries() async {
     var response = await http
-        .get('$_apiUrl/api/v2/series', headers: {'X-Api-Key': _apiKey});
+        .get('${_apiState.apiUrl}/api/v2/series', headers: {'X-Api-Key': _apiState.apiKey});
 
     List<Serie> series = [];
     for (var serie in json.decode(response.body)) {
@@ -57,8 +58,9 @@ class HomePageState extends State<MyHomePage> {
 
   _getData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    _apiUrl = prefs.get('apiUrl') ?? '';
-    _apiKey = prefs.get('apiKey') ?? '';
+    var apiUrl = prefs.get('apiUrl') ?? '';
+    var apiKey = prefs.get('apiKey') ?? '';
+    _apiState = ApiState(apiUrl: apiUrl, apiKey: apiKey);
     await _loadSeries();
   }
 
@@ -78,14 +80,23 @@ class HomePageState extends State<MyHomePage> {
           return Container(
               height: 80,
               child: Padding(
-                  child: Row(children: [
-                    Image.network(
-                        '$_apiUrl/api/v2/series/${_series[index].id.slug}/asset/posterThumb?api_key=$_apiKey',
-                        fit: BoxFit.fill),
-                    Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Text(_series[index].title))
-                  ]),
+                  child: InkWell(
+                      child: Row(children: [
+                        Image.network(
+                            '${_apiState.apiUrl}/api/v2/series/${_series[index].id.slug}/asset/posterThumb?api_key=${_apiState.apiKey}',
+                            fit: BoxFit.fill),
+                        Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Text(_series[index].title))
+                      ]),
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  SeriePage(serie: _series[index],apiState: _apiState),
+                            ));
+                      }),
                   padding: const EdgeInsets.only(left: 8, right: 8)));
         },
         separatorBuilder: (BuildContext context, int index) =>
