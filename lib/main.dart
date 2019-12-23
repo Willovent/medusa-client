@@ -44,7 +44,7 @@ class HomePageState extends State<MyHomePage> {
 
   Future<void> _loadSeries() async {
     var response = await http
-        .get('${_apiState.apiUrl}/api/v2/series', headers: {'X-Api-Key': _apiState.apiKey});
+        .get('${_apiState.apiUrl}/api/v2/series?limit=1000', headers: {'X-Api-Key': _apiState.apiKey});
 
     List<Serie> series = [];
     for (var serie in json.decode(response.body)) {

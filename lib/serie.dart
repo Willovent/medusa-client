@@ -13,23 +13,24 @@ class SeriePage extends StatelessWidget {
   Widget build(BuildContext context) {
     {
       return DefaultTabController(
-        length: 3,
+        length: serie.seasonCount.length + 1,
         child: Scaffold(
           appBar: AppBar(
             bottom: TabBar(
+              isScrollable: serie.seasonCount.length > 4,
               tabs: [
-                Tab(icon: Icon(Icons.directions_car)),
-                Tab(icon: Icon(Icons.directions_transit)),
-                Tab(icon: Icon(Icons.directions_bike)),
+                Tab(text: 'Details'),
+                ...List.generate(
+                    serie.seasonCount.length, (i) => Tab(text: 'S${i + 1}'))
               ],
             ),
             title: Text(serie.title),
           ),
           body: TabBarView(
             children: [
-              mainCard(serie, apiState),
-              Icon(Icons.directions_transit),
-              Icon(Icons.directions_bike),
+              mainTab(serie, apiState),
+              ...List.generate(serie.seasonCount.length,
+                  (i) => seasonTab(serie, apiState, serie.seasonCount[i]))
             ],
           ),
         ),
@@ -38,8 +39,8 @@ class SeriePage extends StatelessWidget {
   }
 }
 
-Widget mainCard(Serie serie, ApiState apiState) {
-  return Column(children: <Widget>[
+Widget mainTab(Serie serie, ApiState apiState) {
+  return ListView(children: <Widget>[
     Card(
         elevation: 5,
         clipBehavior: Clip.antiAlias,
@@ -61,6 +62,46 @@ Widget mainCard(Serie serie, ApiState apiState) {
                         Text(serie.network, style: TextStyle(fontSize: 14)),
                         Text(serie.status, style: TextStyle(fontSize: 14))
                       ]))
-            ])))
+            ]))),
+    Card(
+        elevation: 5,
+        semanticContainer: true,
+        margin: EdgeInsets.all(8),
+        child: Container(
+          height: 160,
+          child: Padding(
+              padding: EdgeInsets.all(12),
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text('Language : ${serie.language}',
+                        style: TextStyle(fontSize: 14)),
+                    Text('Subtitles: ${serie.config.subtitlesEnabled}',
+                        style: TextStyle(fontSize: 14)),
+                    Text('Location : ${serie.config.location}',
+                        style: TextStyle(fontSize: 14)),
+                    Text(serie.genres.join(', '),
+                        style: TextStyle(fontSize: 14))
+                  ])),
+        )),
+    Card(
+      elevation: 5,
+      semanticContainer: true,
+      margin: EdgeInsets.all(8),
+      child: Image.network(
+          '${apiState.apiUrl}/api/v2/series/${serie.id.slug}/asset/fanart?api_key=${apiState.apiKey}'),
+    ),
+    Card(
+      elevation: 5,
+      semanticContainer: true,
+      margin: EdgeInsets.all(8),
+      child: Image.network(
+          '${apiState.apiUrl}/api/v2/series/${serie.id.slug}/asset/banner?api_key=${apiState.apiKey}'),
+    )
   ]);
+}
+
+Widget seasonTab(Serie serie, ApiState apiState, SeasonCount season) {
+  return Text('Season ${season.season} has ${season.episodeCount} episodes');
 }

@@ -41,7 +41,6 @@ class SettingsState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    //_getData();
     return Scaffold(
       appBar: AppBar(
         title: Text('Settings'),
