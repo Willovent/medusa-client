@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:convert';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -26,8 +27,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+          primaryColor: Colors.green,
+          brightness: Brightness.dark,
+          accentColor: Colors.green[900]),
       home: MyHomePage(title: 'Medusa'),
     );
   }
@@ -123,23 +125,23 @@ class HomePageState extends State<MyHomePage> {
     Widget body;
     body = _notConfigured
         ? Center(
-            child: CupertinoButton.filled(
-              child: Text('Click to configure your medusa server'),
-              padding: EdgeInsets.all(20),
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => SettingsPage()));
-              },
-            )
-          )
+            child: RaisedButton(
+            elevation: 6,
+            child: Text('Click to configure your medusa server'),
+            padding: EdgeInsets.all(20),
+            color: Theme.of(context).accentColor,
+            onPressed: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()));
+            },
+          ))
         : _hasError
             ? Text('Error loading series')
             : _series == null
                 ? Center(
                     child: Loading(
                     indicator: BallPulseIndicator(),
-                    size: 80.0,
-                    color: Colors.blue,
+                    size: 50.0,
                   ))
                 : SmartRefresher(
                     enablePullDown: true,
@@ -187,8 +189,13 @@ class SerieItem extends StatelessWidget {
         child: Padding(
             child: InkWell(
                 child: Row(children: [
-                  Image.network(
-                      '${_apiState.apiUrl}/api/v2/series/${_serie.id.slug}/asset/posterThumb?api_key=${_apiState.apiKey}',
+                  CachedNetworkImage(
+                      height: 80,
+                      width: 52,
+                      imageUrl:
+                          '${_apiState.apiUrl}/api/v2/series/${_serie.id.slug}/asset/posterThumb?api_key=${_apiState.apiKey}',
+                      placeholder: (context, url) =>
+                          CircularProgressIndicator(),
                       fit: BoxFit.fill),
                   Padding(
                       padding: const EdgeInsets.all(8),

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:medusa_client/models/api-state.model.dart';
 
@@ -20,8 +21,8 @@ class SeriePage extends StatelessWidget {
               isScrollable: serie.seasonCount.length > 4,
               tabs: [
                 Tab(text: 'Details'),
-                ...List.generate(
-                    serie.seasonCount.length, (i) => Tab(text: 'S${serie.seasonCount[i].season}'))
+                ...List.generate(serie.seasonCount.length,
+                    (i) => Tab(text: 'S${serie.seasonCount[i].season}'))
               ],
             ),
             title: Text(serie.title),
@@ -49,8 +50,10 @@ Widget mainTab(Serie serie, ApiState apiState) {
         child: Container(
             height: 160,
             child: Row(children: <Widget>[
-              Image.network(
-                  '${apiState.apiUrl}/api/v2/series/${serie.id.slug}/asset/posterThumb?api_key=${apiState.apiKey}',
+              CachedNetworkImage(
+                  imageUrl:
+                      '${apiState.apiUrl}/api/v2/series/${serie.id.slug}/asset/posterThumb?api_key=${apiState.apiKey}',
+                  placeholder: (context, url) => CircularProgressIndicator(),
                   fit: BoxFit.fill),
               Padding(
                   padding: EdgeInsets.all(12),
@@ -89,15 +92,19 @@ Widget mainTab(Serie serie, ApiState apiState) {
       elevation: 5,
       semanticContainer: true,
       margin: EdgeInsets.all(8),
-      child: Image.network(
-          '${apiState.apiUrl}/api/v2/series/${serie.id.slug}/asset/fanart?api_key=${apiState.apiKey}'),
+      child: CachedNetworkImage(
+        imageUrl:
+            '${apiState.apiUrl}/api/v2/series/${serie.id.slug}/asset/fanart?api_key=${apiState.apiKey}',
+      ),
     ),
     Card(
       elevation: 5,
       semanticContainer: true,
       margin: EdgeInsets.all(8),
-      child: Image.network(
-          '${apiState.apiUrl}/api/v2/series/${serie.id.slug}/asset/banner?api_key=${apiState.apiKey}'),
+      child: CachedNetworkImage(
+        imageUrl:
+            '${apiState.apiUrl}/api/v2/series/${serie.id.slug}/asset/banner?api_key=${apiState.apiKey}',
+      ),
     )
   ]);
 }

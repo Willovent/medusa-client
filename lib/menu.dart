@@ -11,9 +11,16 @@ class AppMenu extends StatelessWidget {
         Container(
             height: 100,
             child: DrawerHeader(
-              child: Text('Medusa'),
+              child: Row(children: [
+                Container(
+                    height: 30,
+                    child: Padding(
+                        child: Image.asset('lib/assets/medusa_logo.png'),
+                        padding: EdgeInsets.only(right: 8))),
+                Text('Medusa'),
+              ]),
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: Theme.of(context).primaryColor,
               ),
             )),
         ListTile(

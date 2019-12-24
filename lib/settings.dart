@@ -70,7 +70,6 @@ class SettingsState extends State<SettingsPage> {
                     controller: _apiKey,
                     decoration: InputDecoration(labelText: 'Api Key'),
                     validator: (value) {
-                      return null;
                       return value != '' ? null : 'Api key must have a value';
                     },
                   )
