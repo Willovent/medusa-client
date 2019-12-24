@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:medusa_client/models/api-state.model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'app.notifier.dart';
 
 class SettingsPage extends StatefulWidget {
   SettingsPage({Key key, this.title}) : super(key: key);
@@ -30,6 +33,8 @@ class SettingsState extends State<SettingsPage> {
       await prefs.setString('apiKey', _apiKey.text);
       Scaffold.of(context)
           .showSnackBar(SnackBar(content: Text('Settings saved')));
+      apiStateNotifer.value =
+          ApiState(apiKey: _apiKey.text, apiUrl: _apiUrl.text);
     }
   }
 
@@ -65,16 +70,18 @@ class SettingsState extends State<SettingsPage> {
                     controller: _apiKey,
                     decoration: InputDecoration(labelText: 'Api Key'),
                     validator: (value) {
+                      return null;
                       return value != '' ? null : 'Api key must have a value';
                     },
                   )
                 ],
               ))),
-      floatingActionButton: Builder(builder : (ctx) => FloatingActionButton(
-        onPressed: () => _saveData(ctx),
-        tooltip: 'save',
-        child: Icon(Icons.save),
-      )),
+      floatingActionButton: Builder(
+          builder: (ctx) => FloatingActionButton(
+                onPressed: () => _saveData(ctx),
+                tooltip: 'save',
+                child: Icon(Icons.save),
+              )),
     );
   }
 }

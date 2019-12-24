@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:loading/indicator/ball_pulse_indicator.dart';
@@ -10,8 +11,11 @@ import 'package:loading/loading.dart';
 import 'package:medusa_client/menu.dart';
 import 'package:medusa_client/models/api-state.model.dart';
 import 'package:medusa_client/serie.dart';
+import 'package:medusa_client/settings.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'app.notifier.dart';
 import 'models/serie.model.dart';
 
 void main() => runApp(MyApp());
@@ -42,71 +46,118 @@ class HomePageState extends State<MyHomePage> {
   List<Serie> _series;
   ApiState _apiState;
 
+  bool _notConfigured = false;
+
+  bool _hasError = false;
+
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
+
+  void _onRefresh() async {
+    // monitor network fetch
+    await _loadSeries();
+
+    _refreshController.refreshCompleted();
+  }
+
+  void _onLoading() async {
+    await _getData();
+    _refreshController.loadComplete();
+  }
+
   Future<void> _loadSeries() async {
-    var response = await http
-        .get('${_apiState.apiUrl}/api/v2/series?limit=1000', headers: {'X-Api-Key': _apiState.apiKey});
+    try {
+      var response = await http.get(
+          '${_apiState.apiUrl}/api/v2/series?limit=1000',
+          headers: {'X-Api-Key': _apiState.apiKey});
 
-    List<Serie> series = [];
-    for (var serie in json.decode(response.body)) {
-      series.add(Serie.fromJson(serie));
+      List<Serie> series = [];
+      for (var serie in json.decode(response.body)) {
+        series.add(Serie.fromJson(serie));
+      }
+
+      setState(() {
+        _series = series;
+      });
+      _hasError = false;
+    } catch (error) {
+      setState(() {
+        _hasError = true;
+        _series = [];
+      });
+      _refreshController.loadFailed();
     }
-
-    setState(() {
-      _series = series;
-    });
   }
 
   _getData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    var apiUrl = prefs.get('apiUrl') ?? '';
-    var apiKey = prefs.get('apiKey') ?? '';
-    _apiState = ApiState(apiUrl: apiUrl, apiKey: apiKey);
-    await _loadSeries();
+    String apiUrl = prefs.get('apiUrl') ?? '';
+    String apiKey = prefs.get('apiKey') ?? '';
+    if (apiKey.isEmpty || apiUrl.isEmpty) {
+      setState(() {
+        _notConfigured = true;
+        _hasError = false;
+      });
+    } else {
+      _apiState = ApiState(apiUrl: apiUrl, apiKey: apiKey);
+      setState(() {
+        _notConfigured = false;
+      });
+      await _loadSeries();
+    }
   }
 
   @override
   initState() {
     super.initState();
+    apiStateNotifer.addListener(() {
+      if (mounted) {
+        _getData();
+      }
+    });
     _getData();
   }
 
   @override
   Widget build(BuildContext context) {
     Widget body;
-    if (_series != null) {
-      body = ListView.separated(
-        itemCount: _series.length,
-        itemBuilder: (BuildContext context, int index) {
-          return Container(
-              height: 80,
-              child: Padding(
-                  child: InkWell(
-                      child: Row(children: [
-                        Image.network(
-                            '${_apiState.apiUrl}/api/v2/series/${_series[index].id.slug}/asset/posterThumb?api_key=${_apiState.apiKey}',
-                            fit: BoxFit.fill),
-                        Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: Text(_series[index].title))
-                      ]),
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  SeriePage(serie: _series[index],apiState: _apiState),
-                            ));
-                      }),
-                  padding: const EdgeInsets.only(left: 8, right: 8)));
-        },
-        separatorBuilder: (BuildContext context, int index) =>
-            const Divider(thickness: 1),
-      );
-    } else {
-      body = Center(
-          child: Loading(
-              indicator: BallPulseIndicator(), size: 50.0, color: Colors.blue));
-    }
+    body = _notConfigured
+        ? Center(
+            child: CupertinoButton.filled(
+              child: Text('Click to configure your medusa server'),
+              padding: EdgeInsets.all(20),
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => SettingsPage()));
+              },
+            )
+          )
+        : _hasError
+            ? Text('Error loading series')
+            : _series == null
+                ? Center(
+                    child: Loading(
+                    indicator: BallPulseIndicator(),
+                    size: 80.0,
+                    color: Colors.blue,
+                  ))
+                : SmartRefresher(
+                    enablePullDown: true,
+                    header: ClassicHeader(),
+                    controller: _refreshController,
+                    onRefresh: _onRefresh,
+                    onLoading: _onLoading,
+                    child: ListView.separated(
+                      itemCount: _series?.length ?? 0,
+                      itemBuilder: (BuildContext context, int index) {
+                        return SerieItem(
+                            apiState: _apiState, serie: _series[index]);
+                      },
+                      separatorBuilder: (BuildContext context, int index) =>
+                          const Divider(thickness: 1),
+                    ),
+                  );
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Series list'),
@@ -114,5 +165,43 @@ class HomePageState extends State<MyHomePage> {
       body: body,
       drawer: AppMenu(),
     );
+  }
+}
+
+class SerieItem extends StatelessWidget {
+  const SerieItem({
+    Key key,
+    @required ApiState apiState,
+    @required Serie serie,
+  })  : _apiState = apiState,
+        _serie = serie,
+        super(key: key);
+
+  final ApiState _apiState;
+  final Serie _serie;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        height: 80,
+        child: Padding(
+            child: InkWell(
+                child: Row(children: [
+                  Image.network(
+                      '${_apiState.apiUrl}/api/v2/series/${_serie.id.slug}/asset/posterThumb?api_key=${_apiState.apiKey}',
+                      fit: BoxFit.fill),
+                  Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text(_serie.title))
+                ]),
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            SeriePage(serie: _serie, apiState: _apiState),
+                      ));
+                }),
+            padding: const EdgeInsets.only(left: 8, right: 8)));
   }
 }

@@ -21,7 +21,7 @@ class SeriePage extends StatelessWidget {
               tabs: [
                 Tab(text: 'Details'),
                 ...List.generate(
-                    serie.seasonCount.length, (i) => Tab(text: 'S${i + 1}'))
+                    serie.seasonCount.length, (i) => Tab(text: 'S${serie.seasonCount[i].season}'))
               ],
             ),
             title: Text(serie.title),
