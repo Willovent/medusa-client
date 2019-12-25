@@ -91,7 +91,7 @@ class Episode {
 
 class Release {
   String group;
-  bool proper;
+  dynamic proper;
   String name;
   int version;
 
