@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:medusa_client/models/api-state.model.dart';
+import 'package:medusa_client/models/episode.model.dart';
+import 'package:http/http.dart' as http;
 
 import 'models/serie.model.dart';
 
@@ -110,5 +114,67 @@ Widget mainTab(Serie serie, ApiState apiState) {
 }
 
 Widget seasonTab(Serie serie, ApiState apiState, SeasonCount season) {
-  return Text('Season ${season.season} has ${season.episodeCount} episodes');
+  return SeasonTab(apiState: apiState, season: season.season, serie: serie);
+}
+
+class SeasonTab extends StatefulWidget {
+  final Serie serie;
+  final int season;
+  final ApiState apiState;
+
+  SeasonTab({this.serie, this.season, this.apiState});
+
+  @override
+  SeasonState createState() => SeasonState(
+      serie: this.serie, season: this.season, apiState: this.apiState);
+}
+
+class SeasonState extends State<SeasonTab> {
+  Serie serie;
+  int season;
+  ApiState apiState;
+  List<Episode> _episodes;
+
+  SeasonState({this.serie, this.season, this.apiState});
+
+  _loadEpisode() async {
+    try {
+      var response = await http.get(
+          '${apiState.apiUrl}/api/v2/series/${serie.id.slug}/episodes?season=$season&limit=1000',
+          headers: {'X-Api-Key': apiState.apiKey});
+
+      List<Episode> episodes = [];
+      for (var episode in json.decode(response.body)) {
+        episodes.add(Episode.fromJson(episode));
+      }
+      // episodes.sort((y, x) => x.episode > y.episode ? 0 : 1);
+      if (mounted)
+        setState(() {
+          _episodes = episodes;
+        });
+    } catch (error) {
+      if (mounted)
+        setState(() {
+          _episodes = [];
+        });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEpisode();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _episodes == null
+        ? Center(child: CircularProgressIndicator())
+        : ListView.separated(
+            itemCount: _episodes?.length ?? 0,
+            itemBuilder: (context, index) =>
+                Text('E${_episodes[index].episode} ${_episodes[index].title}'),
+            separatorBuilder: (context, index) => Divider(),
+          );
+  }
 }
