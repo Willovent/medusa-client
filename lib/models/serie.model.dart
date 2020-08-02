@@ -308,7 +308,7 @@ class Id {
   String slug;
   String trakt;
   String imdb;
-  int tvmaze;
+  dynamic tvmaze;
 
   Id({this.slug, this.trakt, this.imdb, this.tvmaze});
 

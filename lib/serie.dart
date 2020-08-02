@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:intl/intl.dart';
 import 'package:medusa_client/models/api-state.model.dart';
 import 'package:medusa_client/models/episode.model.dart';
 import 'package:http/http.dart' as http;
@@ -25,8 +27,7 @@ class SeriePage extends StatelessWidget {
               isScrollable: serie.seasonCount.length > 4,
               tabs: [
                 Tab(text: 'Details'),
-                ...List.generate(serie.seasonCount.length,
-                    (i) => Tab(text: 'S${serie.seasonCount[i].season}'))
+                ...serie.seasonCount.map((i) => Tab(text: 'S${i.season}'))
               ],
             ),
             title: Text(serie.title),
@@ -147,7 +148,7 @@ class SeasonState extends State<SeasonTab> {
       for (var episode in json.decode(response.body)) {
         episodes.add(Episode.fromJson(episode));
       }
-      // episodes.sort((y, x) => x.episode > y.episode ? 0 : 1);
+      episodes.sort((y, x) => x.episode > y.episode ? 0 : 1);
       if (mounted)
         setState(() {
           _episodes = episodes;
@@ -173,8 +174,64 @@ class SeasonState extends State<SeasonTab> {
         : ListView.separated(
             itemCount: _episodes?.length ?? 0,
             itemBuilder: (context, index) =>
-                Text('E${_episodes[index].episode} ${_episodes[index].title}'),
+                EpisodeItem(episode: _episodes[index]),
             separatorBuilder: (context, index) => Divider(),
           );
   }
+}
+
+class EpisodeItem extends StatelessWidget {
+  final Episode episode;
+  EpisodeItem({this.episode});
+
+  @override
+  Widget build(BuildContext context) {
+    var aireDate = episode.airDate != null
+        ? DateFormat.yMMMMd().format(DateTime.parse(episode.airDate))
+        : 'unknown';
+
+    return Padding(
+        padding: EdgeInsets.all(8),
+        child: Row(
+          children: <Widget>[
+            Column(
+              children: <Widget>[
+                Text(
+                  'E${episode.episode} - ${episode.title}',
+                  style: TextStyle(fontSize: 15),
+                ),
+                Text('$aireDate'),
+                Container(
+                    color: statusToColor(episode),
+                    child: Padding(
+                        padding: EdgeInsets.all(2),
+                        child: Text('${episode.status}',
+                            style: TextStyle(
+                              fontSize: 12,
+                            ))))
+              ],
+              crossAxisAlignment: CrossAxisAlignment.start,
+            )
+          ],
+        ));
+  }
+}
+
+Color statusToColor(Episode episode) {
+  switch (episode.status.toLowerCase()) {
+    case 'archived':
+    case 'downloaded':
+      return Colors.green.shade500;
+    case 'ignored':
+    case 'skipped':
+      return Colors.blue.shade500;
+    case 'snatched':
+    case 'snatched (proper)':
+      return Colors.purple.shade800;
+    case "unaired":
+      return Colors.yellow.shade900;
+    case "wanted":
+      return Colors.red.shade800;
+  }
+  return Colors.blue.shade500;
 }
