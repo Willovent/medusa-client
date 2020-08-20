@@ -23,14 +23,19 @@ class SeriePage extends StatelessWidget {
         length: serie.seasonCount.length + 1,
         child: Scaffold(
           appBar: AppBar(
+             iconTheme: IconThemeData(
+              color: serie.dominantColor.titleTextColor,
+            ),
             bottom: TabBar(
+              labelColor: serie.dominantColor.bodyTextColor,
               isScrollable: serie.seasonCount.length > 4,
               tabs: [
                 Tab(text: 'Details'),
                 ...serie.seasonCount.map((i) => Tab(text: 'S${i.season}'))
               ],
             ),
-            title: Text(serie.title),
+            title: Text(serie.title ,style: TextStyle(color: serie.dominantColor.titleTextColor)),
+            backgroundColor: serie.dominantColor.color,
           ),
           body: TabBarView(
             children: [

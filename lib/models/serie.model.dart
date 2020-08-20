@@ -1,3 +1,5 @@
+import 'package:palette_generator/palette_generator.dart';
+
 class Serie {
   Year year;
   Config config;
@@ -14,6 +16,7 @@ class Serie {
   Cache cache;
   String status;
   int runtime;
+  PaletteColor dominantColor;
   Id id;
   String network;
   ImdbInfo imdbInfo;

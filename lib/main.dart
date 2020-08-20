@@ -13,6 +13,7 @@ import 'package:medusa_client/menu.dart';
 import 'package:medusa_client/models/api-state.model.dart';
 import 'package:medusa_client/serie.dart';
 import 'package:medusa_client/settings.dart';
+import 'package:palette_generator/palette_generator.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -75,7 +76,21 @@ class HomePageState extends State<MyHomePage> {
 
       List<Serie> series = [];
       for (var serie in json.decode(response.body)) {
-        series.add(Serie.fromJson(serie));
+        var serieObj = Serie.fromJson(serie);
+        series.add(serieObj);
+        try {
+          var poster = NetworkImage(
+              '${_apiState.apiUrl}/api/v2/series/${serieObj.id.slug}/asset/posterThumb?api_key=${_apiState.apiKey}');
+          var paletteGenerator = await PaletteGenerator.fromImageProvider(
+            poster,
+            size: Size(210.0, 295.0),
+            region: Offset.zero & Size(210.0, 295.0),
+            maximumColorCount: 3,
+          );
+          serieObj.dominantColor = paletteGenerator.dominantColor;
+        } catch (e) {
+          debugPrint(e.toString());
+        }
       }
 
       setState(() {
