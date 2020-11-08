@@ -71,7 +71,7 @@ class HomePageState extends State<MyHomePage> {
   Future<void> _loadSeries() async {
     try {
       var response = await http.get(
-          '${_apiState.apiUrl}/api/v2/series?limit=1000',
+          '${_apiState.apiUrl}/api/v2/series?limit=1000&detailed=true',
           headers: {'X-Api-Key': _apiState.apiKey});
 
       List<Serie> series = [];
@@ -180,6 +180,14 @@ class HomePageState extends State<MyHomePage> {
         title: Text('Series list'),
       ),
       body: body,
+      floatingActionButton: FloatingActionButton(child: Icon(Icons.add),  onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (ctxt) => new AlertDialog(
+                    title: Text("Text Dialog"),
+                  )
+              );
+            }),
       drawer: AppMenu(),
     );
   }

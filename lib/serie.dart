@@ -23,7 +23,7 @@ class SeriePage extends StatelessWidget {
         length: serie.seasonCount.length + 1,
         child: Scaffold(
           appBar: AppBar(
-             iconTheme: IconThemeData(
+            iconTheme: IconThemeData(
               color: serie.dominantColor.titleTextColor,
             ),
             bottom: TabBar(
@@ -34,7 +34,8 @@ class SeriePage extends StatelessWidget {
                 ...serie.seasonCount.map((i) => Tab(text: 'S${i.season}'))
               ],
             ),
-            title: Text(serie.title ,style: TextStyle(color: serie.dominantColor.titleTextColor)),
+            title: Text(serie.title,
+                style: TextStyle(color: serie.dominantColor.titleTextColor)),
             backgroundColor: serie.dominantColor.color,
           ),
           body: TabBarView(
@@ -197,7 +198,7 @@ class EpisodeItem extends StatelessWidget {
 
     return Padding(
         padding: EdgeInsets.all(8),
-        child: Row(
+        child: Wrap(
           children: <Widget>[
             Column(
               children: <Widget>[

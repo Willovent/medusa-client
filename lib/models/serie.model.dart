@@ -359,7 +359,6 @@ class ImdbInfo {
       this.lastUpdate,
       this.countries,
       this.countryCodes,
-      this.runtimes,
       this.imdbId,
       this.imdbInfoId,
       this.plot,
@@ -377,7 +376,6 @@ class ImdbInfo {
     lastUpdate = json['lastUpdate'];
     countries = json['countries'];
     countryCodes = json['countryCodes'];
-    runtimes = json['runtimes'];
     imdbId = json['imdbId'];
     imdbInfoId = json['imdbInfoId'];
     plot = json['plot'];
